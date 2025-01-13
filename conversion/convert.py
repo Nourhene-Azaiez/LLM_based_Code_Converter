@@ -41,8 +41,7 @@ except Exception as e:
 
 def generate_text(input, output, code):
     prompt = f"""
-    Convert the following code from {input} to {output} and only return the converted code in a code markdown format without any additional text:
-    {code}
+    Convert the code below from {input} to {output}. Provide only the converted code in markdown, with no additional explanations or text {code}
     """
 
     try:
