@@ -1,135 +1,190 @@
-import subprocess
-import ast
-import difflib
 import os
+import ast
+import subprocess
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+from bert_score import score
 
-
-# Function to validate Python syntax
-def validate_python_syntax(code):
-    try:
-        ast.parse(code)
-        return True
-    except SyntaxError:
-        return False
-
-
-# Function to validate Java syntax
-def validate_java_syntax(code):
-    with open("Main.java", "w") as temp_file:
-        temp_file.write(code)
-    result = subprocess.run(["javac", "Main.java"], capture_output=True)
-    return result.returncode == 0
-
-
-# Function to execute Python code and return True if no errors
-def execute_python_code(code):
-    try:
-        exec_globals = {}
-        exec(code, exec_globals)
-        return True  # Execute successfully
-    except Exception as e:
-        return False  # Execution failed
-
-
-# Function to execute Java code and return True if no errors
-def execute_java_code():
-    # Here we assume the Java code is already written into "Main.java"
-    result = subprocess.run(["javac", "Main.java"], capture_output=True)
-    if result.returncode != 0:
-        return False  # Compilation failed
-    
-    result = subprocess.run(
-        ["java", "Main"], capture_output=True, text=True
-    )
-    return result.returncode == 0  # Return True if no errors during execution
-
-
-# Function to compare the structure of the code (Token or AST comparison)
-def compare_code_structure(source_code, translated_code):
-    source_tokens = source_code.split()
-    translated_tokens = translated_code.split()
-    return difflib.SequenceMatcher(None, source_tokens, translated_tokens).ratio()
-
-
-# General function to validate and compare code translations without known inputs
-def compare_code(source_code, translated_code):
-    # Validate syntax for both source and translation
-    source_valid = validate_python_syntax(source_code)
-    translated_valid = validate_java_syntax(translated_code)
-    print(f"Source syntax validation: {'Valid' if source_valid else 'Invalid'}")
-    print(f"Translation syntax validation: {'Valid' if translated_valid else 'Invalid'}")
-
-    # Check if both the source and translated code execute correctly (independently of inputs)
-    source_execution_valid = execute_python_code(source_code) if source_valid else False
-    translated_execution_valid = execute_java_code() if translated_valid else False
-
-    print(f"Source code execution: {'Successful' if source_execution_valid else 'Failed'}")
-    print(f"Translated code execution: {'Successful' if translated_execution_valid else 'Failed'}")
-
-    # Structure comparison (token or AST comparison)
-    structure_similarity = compare_code_structure(source_code, translated_code)
-    print(f"Structure similarity score: {structure_similarity:.2f}")
-
-
-# Example: Python to Java translation (this can be any Python code and its Java translation)
-source_code = """
-from functools import lru_cache
-import random
-
-PI_CONSTANT = 3.14159
-MAX_ITER = 10
-
-def debug(func):
-    def wrapper(*args, **kwargs):
-        print(f"Calling {func.__name__} with args: {args}, kwargs: {kwargs}")
-        result = func(*args, **kwargs)
-        print(f"{func.__name__} returned: {result}")
-        return result
-    return wrapper
-
-class Circle:
-    instances_created = 0
-
-    def __init__(self, radius):
-        self.radius = radius
-        Circle.instances_created += 1
-
-    @classmethod
-    def total_instances(cls):
-        return cls.instances_created
-
-# Main block demonstrating different function calls and data handling
-if __name__ == "__main__":
-    # Class usage
-    circle = Circle(5)
-    print(f"Total instances: {Circle.total_instances()}")
-"""
-
-translated_code = """
-import java.util.Random;
+# Dataset containing source code and translations
+dataset = [
+    {
+        "source": """ 
+        import java.util.concurrent.ConcurrentHashMap;
+        import java.util.concurrent.ConcurrentMap;
+        import java.util.function.Function;
 
 public class Circle {
-    public static final double PI_CONSTANT = 3.14159;
-    public static final int MAX_ITER = 10;
+            private static int instancesCreated = 0;
+            private double radius;
+            private static final double PI_CONSTANT = 3.14159;
 
-    public static class Circle {
-        public static int instances_created = 0;
-        
-        public Circle(double radius) {
-            instances_created++;
+            @FunctionalInterface
+            public interface FunctionWithCache<T, R> {
+                R apply(T t);
+            }
+
+            public static class FunctionWithCacheImpl<T, R> implements FunctionWithCache<T, R> {
+                private final Function<T, R> func;
+
+                public FunctionWithCacheImpl(Function<T, R> func) {
+                    this.func = func;
+                }
+
+                @Override
+                public R apply(T t) {
+                    return func.apply(t);
+                }
+            }
+
+            public Circle(double radius) {
+                this.radius = radius;
+                instancesCreated++;
+            }
+
+            public double calculateArea(double radius) {
+                return PI_CONSTANT * radius * radius;
+            }
+
+            @Override
+            public String toString() {
+                return "Circle with radius " + radius;
+            }
+
+            public static int getInstancesCreated() {
+                return instancesCreated;
+            }
+
+            public static void main(String[] args) {
+                Circle circle = new Circle(5);
+                System.out.println(circle);
+                System.out.println(circle.calculateArea(5));
+                System.out.println(Circle.getInstancesCreated());
+            }
         }
-    }
 
-    public static void main(String[] args) {
-        Random random = new Random();
-        Circle circle = new Circle(5);
-        System.out.println("Total instances: " + Circle.instances_created);
-    }
-}
-"""
-# Call the comparison function
-compare_code(source_code, translated_code)
+        import java.util.Collections;
 
-# Clean up the generated Java file after execution to avoid issues
-if os.path.exists("Main.java"):
-    os.remove("Main.java")
+        public class Circle {
+            private static int instancesCreated = 0;
+
+            public Circle(int radius) {
+                this.radius = radius;
+                instancesCreated++;
+            }
+
+            public static int totalInstances() {
+                return instancesCreated;
+            }
+
+            public static void main(String[] args) {
+                Circle circle = new Circle(5);
+                System.out.println("Total instances: " + Circle.totalInstances());
+            }
+        }
+                """,
+                "translation": """from functools import lru_cache
+        import random
+
+        PI_CONSTANT = 3.14159
+        MAX_ITER = 10
+
+        def debug(func):
+            def wrapper(*args, **kwargs):
+                print(f"Calling {func.__name__} with args: {args}, kwargs: {kwargs}")
+                result = func(*args, **kwargs)
+                print(f"{func.__name__} returned: {result}")
+                return result
+            return wrapper
+
+        class Circle:
+            instances_created = 0
+            
+            def __init__(self, radius):
+                self.radius = radius
+                Circle.instances_created += 1
+            
+            @classmethod
+            def total_instances(cls):
+                return cls.instances_created
+
+        # Main block demonstrating different function calls and data handling
+        if __name__ == "__main__":
+            # Class usage
+            circle = Circle(5)
+            print(f"Total instances: {Circle.total_instances()}")"""
+    },
+    # Add more examples here
+]
+
+
+def validate_python_syntax(code):
+    """
+    Validate Python syntax using the AST parser.
+    """
+    try:
+        ast.parse(code)
+        return 1
+    except SyntaxError as e:
+        return 0
+
+
+def validate_java_syntax(code):
+    """
+    Validate Java syntax using the `javac` command.
+    """
+    try:
+        class_name = extract_class_name(code)
+        file_name = f"{class_name}.java"
+        with open(file_name, "w") as f:
+            f.write(code)
+        result = subprocess.run(["javac", file_name], capture_output=True, text=True)
+        if result.returncode == 0:
+            return 1
+        else:
+            return 0
+    finally:
+        # Cleanup temporary file
+        if os.path.exists(file_name):
+            os.remove(file_name)
+
+def compute_bertscore(reference, candidate):
+    P, R, F1 = score([candidate], [reference], lang='en')
+    return F1.mean().item()
+
+def extract_class_name(code):
+    """
+    Extract the public class name from Java code.
+    """
+    for line in code.splitlines():
+        if line.strip().startswith("public class"):
+            return line.split()[2]
+    return "Main"
+
+def compute_composite_score(source_syntax_score, translate_syntax_score, bleu_score, source_syntax_weight=0.1, translate_syntax_weight=0.3, bleu_weight=0.6):
+    """
+    Compute a composite score by combining individual scores with weights.
+    """
+    return (source_syntax_score * source_syntax_weight) + (translate_syntax_score * translate_syntax_weight) + (bleu_score * bleu_weight)
+
+# Main Script Execution
+
+source = dataset[0]["source"]
+translation = dataset[0]["translation"]
+
+source_lang="python"
+# Syntax validation
+if source_lang == "python":
+    source_syntax_score = validate_python_syntax(source)
+    translate_syntax_score = validate_java_syntax(translation)
+else:
+    source_syntax_score= validate_java_syntax(source)
+    translate_syntax_score= validate_python_syntax(translation)
+
+# BLEU score
+
+bleu_score = compute_bertscore(translation, source)
+print(f"BLEU score: {bleu_score:.2f}")
+
+composite_score = compute_composite_score(source_syntax_score,translate_syntax_score, bleu_score)
+print(f"Composite Score: {composite_score:.2f}")
+
+print("-" * 50)
