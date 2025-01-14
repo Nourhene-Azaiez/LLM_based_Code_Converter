@@ -1,6 +1,5 @@
-## Here is the Translated code
-
-```java
+ ```
+```markdown
 import java.util.function.Function;
 
 public class Circle {

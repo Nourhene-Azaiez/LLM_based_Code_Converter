@@ -172,3 +172,7 @@ cython_debug/
 #========== additional files =================
 out.txt
 out1.txt
+converted_code.output
+extracted_code.java
+Main.java
+Main.class

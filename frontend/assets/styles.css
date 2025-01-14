@@ -1,0 +1,101 @@
+/* Ensure the body and page content take full height */
+body, .stApp {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Container for the converted code */
+.code-container {
+    margin-bottom: 70px; /* Adjust as needed */
+    padding: 15px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    margin-top: 20px;
+}
+
+/* Sticky form at the bottom */
+.stForm {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    padding: 10px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+}
+
+/* Style for the title */
+.title-container {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.title-icon {
+    font-size: 48px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.title-text {
+    font-size: 24px;
+    color: #444;
+}
+
+/* Navbar styles */
+.navbar {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: left;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    border-top: 1px solid #ddd;
+    bottom: -1;
+    position: fixed;
+    margin-top: 181px;
+    
+}
+.navbar a{
+    text-decoration: none;
+}
+.stSidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensure the sidebar takes the full height of the screen */
+    width: 300px;
+}
+
+.stSidebar .stColumn {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center; /* Centers content horizontally */
+    align-items: flex-end; /* Aligns content to the bottom of the column */
+}
+
+
+/* Button styles for submission */
+.stButton>button {
+    background: linear-gradient(135deg, #6d5dfc, #ff4dff);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: center;
+}
+
+.stButton>button:hover {
+    background: linear-gradient(135deg, #ff4dff, #6d5dfc);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}

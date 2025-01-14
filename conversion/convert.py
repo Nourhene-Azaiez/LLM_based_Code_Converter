@@ -1,10 +1,7 @@
-from flask import Flask, request, jsonify
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch, logging
 import tensorflow as tf
-
-# Flask app initialization
-app = Flask(__name__)
+import re
 
 # ------------------ GPU Configurations ------------------
 
@@ -41,41 +38,59 @@ except Exception as e:
 
 def generate_text(input, output, code):
     prompt = f"""
-    Convert the code below from {input} to {output}. Provide only the converted code in markdown, with no additional explanations or text {code}
+    Convert the following code from {input} to {output}. Provide only the converted code, in markdown format with the {code} tag:
+
+    {code}
     """
 
     try:
         input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(model.device)
         output = model.generate(
             input_ids,
-            max_length=3000,
-            temperature=0.7,
+            max_length=2000,
+            temperature=0.3,
             num_return_sequences=1,
         )
 
         generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-        generated_text = generated_text[len(prompt):]
 
-        # Return a dictionary directly
+        # Save the generated output to a file
+        with open("converted_code.output", "w") as output_file:
+            output_file.write(generated_text)
+
+        # Return the result directly
         return {"Report": generated_text}
 
     except Exception as e:
         logging.error(f"Error generating report: {e}")
         return {"error": str(e)}
 
+def code_extraction (input_string):
+    pattern = re.compile(r"```java(?:\w+)?\n(.*?)```", re.DOTALL)
+    code_blocks = pattern.findall(input_string)
 
+    # Write the code blocks to a file
+    output_file = "extracted_code.java"
+
+    with open(output_file, "w") as file:
+        for code in code_blocks:
+            file.write(code.strip())
+            file.write("\n\n")
+
+    print(f"Extracted code blocks have been written to {output_file}")
 # ------------------ Main ------------------
-# code_path="code_samples/p1.py"
-code_path="../code_samples/p1.py"
+
+code_path = "../code_samples/p1.py"
 
 def detect_lan(code_path):
-        if code_path.endswith('.py'):
-            return "python","java"
-        elif code_path.endswith('.java'):
-            return "java","python"
-        
+    if code_path.endswith('.py'):
+        return "python", "java"
+    elif code_path.endswith('.java'):
+        return "java", "python"
 
 with open(code_path, 'r') as file:
-    code=file.read()
+    code = file.read()
 
-print(generate_text(detect_lan(code_path)[0],detect_lan(code_path)[1],code)["Report"])
+# Generate the code conversion and save it to a file
+result = generate_text(detect_lan(code_path)[0], detect_lan(code_path)[1], code)
+code_extraction(result["Report"])
