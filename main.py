@@ -1,9 +1,9 @@
 # main.py
-from lib.Chunker import *
-from lib.CodeParser import *
+from utils.Chunker import *
+from utils.CodeParser import *
 import warnings
-from lib.utils import *
-from lib.Converter import *
+from utils.utils import *
+from utils.Converter import *
 
 #Ignore the warning messages each time
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -59,3 +59,23 @@ for code in chunks.values():
     if "Report" in result:
         # Extract the code blocks from the generated report
         converter.code_extraction(result["Report"])
+# from app import CodeConversionModule
+
+# # Define the input language (e.g., 'py' for Python, 'java' for Java)
+# input_lang = "py"
+# output_lang = "java"
+
+# # The source code that you want to convert
+# code_path="code_samples/p1.py"
+# # Read the code from the file
+# with open(code_path, 'r') as file:
+#     code = file.read()
+
+# # Initialize the conversion module
+# converter = CodeConversionModule(input_lang, output_lang)
+
+# # Convert the code
+# converted_code = converter.convert_code(code)
+
+# # Print the converted code
+# print(converted_code)
