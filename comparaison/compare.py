@@ -1,94 +1,135 @@
-import ast
-import random
 import subprocess
+import ast
+import difflib
 import os
 
-# Function to read the contents of a Java file
-def read_java_file(file_path):
-    with open(file_path, 'r') as file:
-        return file.read()
 
-# Function to read the contents of a Python file
-def read_python_file(file_path):
-    with open(file_path, 'r') as file:
-        return file.read()
+# Function to validate Python syntax
+def validate_python_syntax(code):
+    try:
+        ast.parse(code)
+        return True
+    except SyntaxError:
+        return False
 
-# Generate dynamic test cases for Python
-def generate_python_test_cases():
-    test_cases = []
-    for _ in range(5):
-        test_cases.append([random.randint(1, 10), random.randint(1, 10)])  # Random test inputs
-    return test_cases
 
-# Python function definition to compare against Java (dummy function to simulate behavior)
-def python_add(a, b):
-    return a + b
+# Function to validate Java syntax
+def validate_java_syntax(code):
+    with open("Main.java", "w") as temp_file:
+        temp_file.write(code)
+    result = subprocess.run(["javac", "Main.java"], capture_output=True)
+    return result.returncode == 0
 
-# Function to compile Java code automatically if needed
-def compile_java_code(java_code, java_file="j1.java"):
-    # Check if the class name is 'j1', adjust the file name if needed
-    if "public class j1" in java_code:
-        java_file = "j1.java"  # Ensure the file name matches the class name
-    else:
-        raise Exception("Java code should contain a public class named 'j1'.")
 
-    # Write the Java code to the file
-    with open(java_file, 'w') as file:
-        file.write(java_code)
+# Function to execute Python code and return True if no errors
+def execute_python_code(code):
+    try:
+        exec_globals = {}
+        exec(code, exec_globals)
+        return True  # Execute successfully
+    except Exception as e:
+        return False  # Execution failed
 
-    # Check if the j1.class file exists, compile if not
-    if not os.path.exists("j1.class"):
-        print("Compiling Java code...")
-        result = subprocess.run(["javac", java_file], capture_output=True, text=True)
-        if result.returncode != 0:
-            raise Exception(f"Error compiling Java code: {result.stderr}")
-        print("Java code compiled successfully.")
 
-# Function to run Java code
-def run_java_code(test_case):
-    # Set the current directory as the classpath
-    classpath = os.getcwd()  # The directory where j1.class is located
-    result = subprocess.run(
-        ["java", "-cp", classpath, "j1", str(test_case[0]), str(test_case[1])],
-        text=True,
-        capture_output=True
-    )
+# Function to execute Java code and return True if no errors
+def execute_java_code():
+    # Here we assume the Java code is already written into "Main.java"
+    result = subprocess.run(["javac", "Main.java"], capture_output=True)
     if result.returncode != 0:
-        raise Exception(f"Java program error: {result.stderr}")
-    return result.stdout.strip()
+        return False  # Compilation failed
+    
+    result = subprocess.run(
+        ["java", "Main"], capture_output=True, text=True
+    )
+    return result.returncode == 0  # Return True if no errors during execution
 
-# Function to execute the Python code
-def run_python_code(python_code, test_case):
-    exec_globals = {}
-    exec(python_code, exec_globals)
-    return exec_globals['add'](test_case[0], test_case[1])
 
-# Compare the outputs of Python and Java
-def compare_outputs():
-    # Load Java code from j1.java
-    java_code = read_java_file("code_samples/j1.java")
+# Function to compare the structure of the code (Token or AST comparison)
+def compare_code_structure(source_code, translated_code):
+    source_tokens = source_code.split()
+    translated_tokens = translated_code.split()
+    return difflib.SequenceMatcher(None, source_tokens, translated_tokens).ratio()
 
-    # Load Python code from p3.py
-    python_code = read_python_file("code_samples/p3.py")
 
-    # Compile Java code first
-    compile_java_code(java_code)
+# General function to validate and compare code translations without known inputs
+def compare_code(source_code, translated_code):
+    # Validate syntax for both source and translation
+    source_valid = validate_python_syntax(source_code)
+    translated_valid = validate_java_syntax(translated_code)
+    print(f"Source syntax validation: {'Valid' if source_valid else 'Invalid'}")
+    print(f"Translation syntax validation: {'Valid' if translated_valid else 'Invalid'}")
 
-    # Generate test cases
-    python_test_cases = generate_python_test_cases()
+    # Check if both the source and translated code execute correctly (independently of inputs)
+    source_execution_valid = execute_python_code(source_code) if source_valid else False
+    translated_execution_valid = execute_java_code() if translated_valid else False
 
-    for test_case in python_test_cases:
-        # Get the output of Python code
-        python_output = run_python_code(python_code, test_case)
+    print(f"Source code execution: {'Successful' if source_execution_valid else 'Failed'}")
+    print(f"Translated code execution: {'Successful' if translated_execution_valid else 'Failed'}")
 
-        # Get the output of Java code
-        java_output = run_java_code(test_case)
+    # Structure comparison (token or AST comparison)
+    structure_similarity = compare_code_structure(source_code, translated_code)
+    print(f"Structure similarity score: {structure_similarity:.2f}")
 
-        # Compare the outputs
-        if str(python_output) != str(java_output):
-            return "The codes are not similar."
-    return "The codes are similar."
 
-# Execute the comparison
-result = compare_outputs()
-print(result)
+# Example: Python to Java translation (this can be any Python code and its Java translation)
+source_code = """
+from functools import lru_cache
+import random
+
+PI_CONSTANT = 3.14159
+MAX_ITER = 10
+
+def debug(func):
+    def wrapper(*args, **kwargs):
+        print(f"Calling {func.__name__} with args: {args}, kwargs: {kwargs}")
+        result = func(*args, **kwargs)
+        print(f"{func.__name__} returned: {result}")
+        return result
+    return wrapper
+
+class Circle:
+    instances_created = 0
+
+    def __init__(self, radius):
+        self.radius = radius
+        Circle.instances_created += 1
+
+    @classmethod
+    def total_instances(cls):
+        return cls.instances_created
+
+# Main block demonstrating different function calls and data handling
+if __name__ == "__main__":
+    # Class usage
+    circle = Circle(5)
+    print(f"Total instances: {Circle.total_instances()}")
+"""
+
+translated_code = """
+import java.util.Random;
+
+public class Circle {
+    public static final double PI_CONSTANT = 3.14159;
+    public static final int MAX_ITER = 10;
+
+    public static class Circle {
+        public static int instances_created = 0;
+        
+        public Circle(double radius) {
+            instances_created++;
+        }
+    }
+
+    public static void main(String[] args) {
+        Random random = new Random();
+        Circle circle = new Circle(5);
+        System.out.println("Total instances: " + Circle.instances_created);
+    }
+}
+"""
+# Call the comparison function
+compare_code(source_code, translated_code)
+
+# Clean up the generated Java file after execution to avoid issues
+if os.path.exists("Main.java"):
+    os.remove("Main.java")
