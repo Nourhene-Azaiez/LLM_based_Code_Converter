@@ -4,7 +4,7 @@ import subprocess
 from bert_score import score
 
 class CodeComparator:
-    def __init__(self, source_code, translated_code, source_language):
+    def __init__(self, source_code, translated_code, source_language="Python"):
         self.source_code = source_code
         self.translated_code = translated_code
         self.source_language = source_language
