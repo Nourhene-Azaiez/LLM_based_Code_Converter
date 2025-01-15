@@ -4,6 +4,7 @@ from utils.CodeParser import *
 import warnings
 from utils.utils import *
 from utils.Converter import *
+from utils.Comparator import *
 
 #Ignore the warning messages each time
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -11,7 +12,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 #--------------------------------------- Code folder ------------------------------------------------
 
 # code_path="code_samples/p1.py"
-code_path="code_samples/p1.py"
+code_path="code_samples/p2.py"
 
 def detect_lan(code_path):
         if code_path.endswith('.py'):
@@ -46,7 +47,7 @@ CodeChunker.print_chunks(chunks)
 # Initialize the CodeConverter class
 converter = CodeConverter()
 
-for code in chunks.values():
+for chunk in chunks.values():
     # Define the code file path
     # code_path = "code_samples/p1.py"
 
@@ -55,27 +56,26 @@ for code in chunks.values():
     #     code = file.read()
 
     # Generate the code conversion
-    result = converter.generate_text("python", "java", code)
-    if "Report" in result:
-        # Extract the code blocks from the generated report
-        converter.code_extraction(result["Report"])
-# from app import CodeConversionModule
+    translation="""
+    """
+    score= 0.0
+    attempt=1
+    max_attempts=1
+    while score < 0.5 and attempt <= max_attempts:
+        attempt+=1
+        result = converter.generate_text("python", "java", chunk)
+        if "Report" in result:
+            # Extract the code blocks from the generated report
+            result=converter.code_extraction(result["Report"])
+            comparator = CodeComparator(chunk, result, "java")
+            scores = comparator.compare()
+            score=scores["global_score"]
+    translation+= result
 
-# # Define the input language (e.g., 'py' for Python, 'java' for Java)
-# input_lang = "py"
-# output_lang = "java"
 
-# # The source code that you want to convert
-# code_path="code_samples/p1.py"
-# # Read the code from the file
-# with open(code_path, 'r') as file:
-#     code = file.read()
-
-# # Initialize the conversion module
-# converter = CodeConversionModule(input_lang, output_lang)
-
-# # Convert the code
-# converted_code = converter.convert_code(code)
-
-# # Print the converted code
-# print(converted_code)
+#--------------------------------------- Compare Code ------------------------------------------------
+comparator = CodeComparator(code, translation, "java")
+print('----------------------------------')
+print(translation)
+print('----------------------------------')
+print("Comparaison Scores:", scores)

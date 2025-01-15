@@ -2,4 +2,5 @@
 from .Chunker import *
 from .CodeParser import *
 from .Converter import *
+from .Comparator import *
 from .utils import *

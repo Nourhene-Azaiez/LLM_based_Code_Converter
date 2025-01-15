@@ -42,7 +42,9 @@ class CodeConverter:
 
         1. **Input Language**: {input_lang}
         2. **Output Language**: {output_lang}
-        3. **Output Format**: Return only the converted code enclosed in triple backticks with the appropriate language tag (e.g., ```java).
+        3. **Output Format**:
+        - Return only the converted code enclosed in triple backticks with the appropriate language tag (e.g., ```java or ```python).
+        - The output should have only one code block with the converted code.
         4. **Code Style Guidelines**:
         - Follow the conventions of the output language (e.g., PascalCase for Java classes, camelCase for variables).
         - Include necessary imports for the translated code.
@@ -75,10 +77,9 @@ class CodeConverter:
         pattern = re.compile(r"```java(?:\w+)?\n(.*?)```", re.DOTALL)
         code_blocks = pattern.findall(input_string)
 
-        output_file = "extracted_code.java"
-        with open(output_file, "a") as file:
-            for code in code_blocks:
-                file.write(code.strip())
-                file.write("\n\n")
-
-        print(f"Extracted code blocks have been written to {output_file}")
+        translated_code=""""""
+        for code in code_blocks:
+            translated_code+= code
+            translated_code+= "\n"
+        
+        return translated_code
