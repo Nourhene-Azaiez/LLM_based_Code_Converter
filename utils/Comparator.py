@@ -1,7 +1,6 @@
 import os
 import ast
 import subprocess
-from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from bert_score import score
 
 class CodeComparator:
@@ -47,14 +46,6 @@ class CodeComparator:
             if line.strip().startswith("public class"):
                 return line.split()[2]
         return "Main"
-
-    @staticmethod
-    def compute_bleu(reference, candidate):
-        """
-        Compute BLEU score for the reference and candidate code.
-        """
-        smoothing_function = SmoothingFunction().method1
-        return sentence_bleu([reference.split()], candidate.split(), smoothing_function=smoothing_function)
 
     @staticmethod
     def compute_bertscore(reference, candidate):

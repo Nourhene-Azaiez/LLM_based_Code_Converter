@@ -159,11 +159,11 @@ def extract_class_name(code):
             return line.split()[2]
     return "Main"
 
-def compute_composite_score(source_syntax_score, translate_syntax_score, bleu_score, source_syntax_weight=0.1, translate_syntax_weight=0.3, bleu_weight=0.6):
+def compute_composite_score(source_syntax_score, translate_syntax_score, bert_score, source_syntax_weight=0.1, translate_syntax_weight=0.3, bert_weight=0.6):
     """
     Compute a composite score by combining individual scores with weights.
     """
-    return (source_syntax_score * source_syntax_weight) + (translate_syntax_score * translate_syntax_weight) + (bleu_score * bleu_weight)
+    return (source_syntax_score * source_syntax_weight) + (translate_syntax_score * translate_syntax_weight) + (bert_score * bert_weight)
 
 # Main Script Execution
 

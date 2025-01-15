@@ -27,7 +27,8 @@ class CodeParser:
             "ts": "typescript",
             "tsx": "typescript",
             "php": "php",
-            "rb": "ruby"
+            "rb": "ruby",
+            "java":"java"
         }
         if file_extensions is None:
             self.language_names = []
