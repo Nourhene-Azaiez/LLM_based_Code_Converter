@@ -30,7 +30,7 @@ with st.sidebar:
         st.write("3. View the converted code in the chat history.")
 
 # Language selection
-code_types = ["Select a language...","Python", "JavaScript", "Java", "CSS", "TypeScript", "PHP", "Ruby"]
+code_types = ["Select a language...","Python", "JavaScript", "Java", "TypeScript", "PHP", "Ruby"]
 
 # Display chat history using Streamlit's chat format
 for msg in st.session_state.messages:
