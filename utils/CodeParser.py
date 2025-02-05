@@ -242,6 +242,24 @@ class CodeParser:
                 'module': 'Module',
                 'singleton_class': 'Singleton Class',
                 'begin': 'Begin Block',
+            },
+            'java': {
+                'import_statement': 'Import Statement',
+                'package_declaration': 'Package Declaration',
+                'class_declaration': 'Class Declaration',
+                'method_declaration': 'Method Declaration',
+                'constructor': 'Constructor',
+                'if_statement': 'If Statement',
+                'else_statement': 'Else Statement',
+                'switch_statement': 'Switch Statement',
+                'for_loop': 'For Loop',
+                'while_loop': 'While Loop',
+                'try_statement': 'Try Statement',
+                'catch_clause': 'Catch Clause',
+                'finally_clause': 'Finally Clause',
+                'return_statement': 'Return Statement',
+                'variable_declaration': 'Variable Declaration',
+                'comment': 'Comment',
             }
         }
 
@@ -277,7 +295,11 @@ class CodeParser:
             },
             'rb': {
                 'comment': 'Comment',
+            },
+            'java': {
+                'comment': 'Comment',
             }
+
         }
 
         if file_extension in node_types.keys():

@@ -1,5 +1,6 @@
 import tiktoken
-import json
+import json, logging
+from utils.CodeParser import CodeParser
 
 def count_tokens(string: str, encoding_name: str) -> int:
     """Returns the number of tokens in a text string."""
@@ -39,18 +40,26 @@ def analyze_structure(node, depth=0):
     return token_count
 
 # Function to calculate the mean token count of logical structures
-def calculate_mean_token_count(code):
-    tree = ast.parse(code)  # Parse the code into an AST
+def calculate_mean_token_count(code: str, file_extension: str, parser: CodeParser) -> float:
+    # Parse the code using tree-sitter
+    tree_root = parser.parse_code(code, file_extension)  # Get the root node of the parsed tree
+    if tree_root is None:
+        logging.error(f"Failed to parse the code for {file_extension}")
+        return 0.0
+    
     total_tokens = 0
-    structure_count = 0
-    
-    # Analyze each top-level structure
-    for node in ast.iter_child_nodes(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            structure_count += 1
-            total_tokens += analyze_structure(node)
-    
-    # Calculate mean token count
-    if structure_count == 0:
-        return 0  # Avoid division by zero if no structures found
+    structure_count = 1
+
+    # Extract the structures of interest (functions, classes) based on the file extension
+    points_of_interest = parser.extract_points_of_interest_grouped(tree_root, file_extension)
+
+    for group in points_of_interest:
+        for sub_group in group:
+            for node, type_of_interest in sub_group:
+                # Increment the structure count based on the type (e.g., 'Function', 'Class')
+                if type_of_interest in ['Function', 'Class']:
+                    structure_count += 1
+                    # Add the size of the structure (i.e., number of tokens) to the total token count
+                total_tokens += node.end_point[0] - node.start_point[0] + 1  # Calculate number of lines/tokens
+
     return total_tokens / structure_count

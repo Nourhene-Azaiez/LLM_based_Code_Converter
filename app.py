@@ -1,119 +1,116 @@
 import streamlit as st
-from utils.code_processing import CodeProcessor  # Import the module
+from utils.code_processing import *
 import os
 
-# Set the page layout to centered mode
-st.set_page_config(layout="wide", page_title="Interactive Code Translator")
-
-# Load custom CSS for styling
+# Load custom CSS for chat styling
 def load_css():
-    css_file_path = "assets/styles.css"
-    if os.path.exists(css_file_path):
-        with open(css_file_path) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    with open("assets/styles.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Load CSS
+# Initialize session state for chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# App title with an emoji for better UX
+st.title("💬 Code Converter Chatbot")
+
+# Load custom CSS
 load_css()
 
-# Sidebar Content: Logo and Navbar
-st.sidebar.image("assets/logo.png", width=150)
-st.sidebar.markdown("<br>" * 14, unsafe_allow_html=True)
-st.sidebar.markdown("""
-    <div class="navbar">
-        <a href="#">About</a>
-        <a href="#">Contact</a>
-    </div>
-""", unsafe_allow_html=True)
+# Sidebar for settings
+with st.sidebar:
+    # Title at the header
+    st.title("⚙️ Settings")
+    
+    
+    # Expander for additional settings
+    with st.expander("💡 Tips"):
+        st.write("1. Select your input and output languages.")
+        st.write("2. Paste your code and click 'Convert'.")
+        st.write("3. View the converted code in the chat history.")
 
-col1, col2 = st.sidebar.columns(2)
-with col1:
-    st.image("assets/logo_EY.png", width=90)
-with col2:
-    st.image("assets/logo_supcom.png", width=130)
+# Language selection
+code_types = ["Select a language...","Python", "JavaScript", "Java", "CSS", "TypeScript", "PHP", "Ruby"]
 
-# App Title
-st.markdown("""
-<div class="title-container">
-    <div class="title-icon">✨</div>
-    <div class="title-text">Interactive Code Translator</div>
-</div>
-""", unsafe_allow_html=True)
-st.write("")
+# Display chat history using Streamlit's chat format
+for msg in st.session_state.messages:
+    role = "user" if msg["role"] == "user" else "assistant"
+    
+    with st.chat_message(role):
+        st.markdown(f"**{role.capitalize()} ({msg['input_language']} → {msg['output_language']}):**")
+        st.code(msg["content"], language=msg["output_language"].lower())
 
-# Container for displaying converted code and interaction
-if 'converted_code_md' in st.session_state and st.session_state['converted_code_md']:
-    with st.container():
-        col21, col22, col23 = st.columns([3, 2, 2])
-        with col21:
-            st.subheader("Converted Code and Scores")
-        with col23:
-            st.download_button(
-                label="Download",
-                data=st.session_state["converted_code_md"],
-                file_name="conversion_result.md",
-                mime="text/markdown",
-                use_container_width=True,
-            )
-
-        # Display the Markdown in a scrollable area
-        converted_code_md = st.session_state["converted_code_md"]
-        st.markdown(f'''
-        <div class="markdown-container">
-            {converted_code_md}
-        </div>
-        ''', unsafe_allow_html=True)
-
-# Code conversion form (fixed at the bottom)
-with st.form(key="code_conversion_form", clear_on_submit=False):
-    input_code = st.text_area("Paste your code here:", height=150, key="input_code")
-
-    # Side-by-side dropdowns for selecting input and output code types
-    col1, col2, col3, col4 = st.columns([4, 4, 6, 3])
-
+# Input form at the bottom
+with st.form(key="chat_input_form", clear_on_submit=True):
+    col1, col2 = st.columns(2)
     with col1:
-        conversion_type_input = st.selectbox("Input Code Type", ["Python", "Java"], key="input_type")
-
+        input_language = st.selectbox("📝 Input Language", code_types, index=0)
     with col2:
-        conversion_type_output = st.selectbox("Output Code Type", ["Python", "Java"], key="output_type")
+        output_language = st.selectbox("🎯 Output Language", code_types, index=0)
+    
+    input_code = st.text_area("✍️ Code Input", height=150, placeholder="Paste your code here...")
+    submit_button = st.form_submit_button("🚀 Convert Code")
 
-    # Styled Submit Button (acts as Convert button)
-    with col4:
-        st.write("")
-        convert_button = st.form_submit_button("Convert", use_container_width=True)
+# Handle code conversion
+if submit_button:
+    if input_language == "Select a language...":
+        st.warning("Please select a valid input language.")
+    if output_language == "Select a language...":
+        st.warning("Please select a valid output language.")
+    if input_code.strip() == "":
+        st.warning("⚠️ Please enter some code to convert.")
+    else:
+        # Add user input to chat history
+        st.session_state.messages.append({
+            "role": "user",
+            "content": input_code,
+            "input_language": input_language,
+            "output_language": output_language
+        })
+        # **Force rerun** to show user message before processing
+        st.rerun()
 
-    # Process the code if the submit button is clicked
-    if convert_button:
-        if input_code.strip():
-            # Create a temporary file to store the input code
-            ext="py" if conversion_type_input=="Python" else "java"
-            temp_path = f"/tmp/input_code.{ext}"
-            with open(temp_path, "w") as f:
-                f.write(input_code)
 
-            # Use the CodeProcessor module to process the code
-            processor = CodeProcessor(temp_path)
-            chunks = processor.parse_and_chunk()  # Parse and chunk the code
-            converted_code= processor.convert_code(chunks, conversion_type_output.lower())  # Convert code and get scores
-            # Generate Markdown from the results
-            converted_code_md = f"""
+if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+    last_message = st.session_state.messages[-1]
+    # Show a loading spinner while processing
+    with st.spinner("⏳ Converting code..."):
+        ext = "py" if input_language == "Python" else \
+        "java" if input_language == "Java" else \
+        "js" if input_language == "JavaScript" else \
+        "ts" if input_language == "TypeScript" else \
+        "rb" if input_language == "Ruby" else \
+        "php" if input_language == "PHP" else \
+        "css" if input_language == "CSS" else \
+        None
+        temp_path = f"/tmp/input_code.{ext}"
+        
+        with open(temp_path, "w") as f:
+            f.write(input_code)
 
-            
-            
-            
-## Code Conversion Result
+        # Use the CodeProcessor module to process the code
+        description,converted_code,score=process_code(temp_path,output_language)
 
-### Description 
-The provided code is a simple Java program that defines a Calculator class with basic arithmetic operations like addition and subtraction. 
-### Converted Code
-```{conversion_type_output.lower()}
+    # Create a formatted response with markdown
+    converted_code_md = f"""📝 Converted Code
+Input Language:{input_language}  
+Output Language: {output_language}  
+{description}
+
+
+Conversion Result:
+
 {converted_code}
-```
+Conversion Score: {score}
 """
-            # Store the Markdown result in session state
-            st.session_state["converted_code_md"] = converted_code_md
 
-            # Inform the user of success
-            st.success("Code converted successfully!")
-        else:
-            st.warning("Please enter some code to convert!")
+    # Add assistant response to chat history
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": converted_code_md,
+        "input_language": input_language,
+        "output_language": output_language
+    })
 
+    # Rerun the app to update the chat history
+    st.rerun()

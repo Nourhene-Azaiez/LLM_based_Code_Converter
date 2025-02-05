@@ -1,102 +1,104 @@
-/* Ensure the body and page content take full height */
-body, .stApp {
-    height: 100%;
-    margin: 0;
+/* Main container */
+.stMainBlockContainer {
+    color: rgb(49, 51, 63);
+    color-scheme: light;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 7rem 2rem 12rem;
+    max-width: inherit;
+}
+
+.stApp {
+    background-color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
     display: flex;
     flex-direction: column;
+    height: 100vh;
 }
 
-/* Container for the converted code */
-.code-container {
-    margin-bottom: 70px; /* Adjust as needed */
-    padding: 15px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    font-family: 'Courier New', monospace;
-    white-space: pre-wrap;
-    margin-top: 20px;
+/* Chat history section */
+.stMarkdown {
+    display: none; /* Hide initially */
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
-/* Sticky form at the bottom */
+.stMarkdown:has(code) {
+    display: block; /* Show only when code content is present */
+}
+
+.stMarkdown code {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #f0f0f0;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Fixed input area at the bottom */
 .stForm {
-    position: sticky;
+    position:sticky;
     bottom: 0;
-    left: 0;
-    width: 100%;
-    background: white;
-    padding: 10px;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-    z-index: 999;
-}
-
-/* Style for the title */
-.title-container {
-    text-align: center;
-    margin-top: 50px;
-}
-
-.title-icon {
-    font-size: 48px;
-    color: #888;
-    margin-bottom: 10px;
-}
-
-.title-text {
-    font-size: 30px;
-    font-weight: bold;
-    color: #444;
-}
-
-/* Navbar styles */
-.navbar {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: left;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+    background-color: white;
+    padding: 20px;
     border-top: 1px solid #ddd;
-    bottom: -1;
-    position: fixed;
-    margin-top: 181px;
-    
-}
-.navbar a{
-    text-decoration: none;
-}
-.stSidebar {
-    display: flex;
-    flex-direction: column;
-    height: 100%; /* Ensure the sidebar takes the full height of the screen */
-    width: 300px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 10;
 }
 
-.stSidebar .stColumn {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center; /* Centers content horizontally */
-    align-items: flex-end; /* Aligns content to the bottom of the column */
+/* Text area for code input */
+.stTextArea textarea {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    min-height: 50px;
+    height: min-content;
+    max-height: 200px;
 }
 
+/* Dropdowns for input/output selection */
+.stSelectbox>div>div>select {
+    border-radius: 5px;
+    padding: 8px;
+    border: 1px solid #ddd;
+}
 
-/* Button styles for submission */
+/* Convert button */
 .stButton>button {
-    background: linear-gradient(135deg, #6d5dfc, #ff4dff);
+    background-color: #0078d4;
     color: white;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    border-radius: 25px;
+    border-radius: 5px;
     padding: 10px 20px;
+    border: none;
+    font-size: 16px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-    text-align: center;
 }
 
 .stButton>button:hover {
-    background: linear-gradient(135deg, #ff4dff, #6d5dfc);
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    background-color: #005bb5;
+}
+
+/* Sidebar */
+.stSidebar {
+    background-color: #ffffff;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.stSidebar stImage {
+    position: fixed;
+    bottom: 5;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    background-color: inherit;
+    text-align: center;
+    border-top: 1px solid #e1e4e8;
 }

@@ -4,10 +4,12 @@ import subprocess
 from bert_score import score
 
 class CodeComparator:
-    def __init__(self, source_code, translated_code, source_language="Python"):
+    def __init__(self, source_code, translated_code,source_description,target_description, source_language="Python"):
         self.source_code = source_code
         self.translated_code = translated_code
         self.source_language = source_language
+        self.source_description=source_description
+        self.target_description=target_description
 
     @staticmethod
     def validate_python_syntax(code):
@@ -36,6 +38,55 @@ class CodeComparator:
             # Cleanup temporary file
             if os.path.exists(file_name):
                 os.remove(file_name)
+
+    @staticmethod
+    def validate_javascript_syntax(code):
+        try:
+            result = subprocess.run(["node", "-c", "-e", code], capture_output=True, text=True)
+            return 1 if result.returncode == 0 else 0
+        except Exception:
+            return 0
+
+    @staticmethod
+    def validate_typescript_syntax(code):
+        try:
+            file_name = "temp.ts"
+            with open(file_name, "w") as f:
+                f.write(code)
+            result = subprocess.run(["tsc", "--noEmit", file_name], capture_output=True, text=True)
+            return 1 if result.returncode == 0 else 0
+        finally:
+            if os.path.exists(file_name):
+                os.remove(file_name)
+
+    @staticmethod
+    def validate_css_syntax(code):
+        try:
+            from cssutils import parseString
+            parseString(code)
+            return 1
+        except Exception:
+            return 0
+    
+    @staticmethod
+    def validate_php_syntax(code):
+        try:
+            file_name = "temp.php"
+            with open(file_name, "w") as f:
+                f.write(code)
+            result = subprocess.run(["php", "-l", file_name], capture_output=True, text=True)
+            return 1 if "No syntax errors detected" in result.stdout else 0
+        finally:
+            if os.path.exists(file_name):
+                os.remove(file_name)
+
+    @staticmethod
+    def validate_ruby_syntax(code):
+        try:
+            result = subprocess.run(["ruby", "-c", "-e", code], capture_output=True, text=True)
+            return 1 if "Syntax OK" in result.stdout else 0
+        except Exception:
+            return 0
 
     @staticmethod
     def extract_class_name(code):
@@ -79,7 +130,7 @@ class CodeComparator:
             translate_syntax_score = self.validate_python_syntax(self.translated_code)
 
         # Use BLEU or BERTScore for similarity
-        similarity_score = self.compute_bertscore(self.source_code, self.translated_code)
+        similarity_score = self.compute_bertscore(self.source_description, self.target_description)
 
         composite_score = self.compute_composite_score(
             source_syntax_score, translate_syntax_score, similarity_score
@@ -92,24 +143,3 @@ class CodeComparator:
             "global_score": composite_score
         }
 
-# Example Usage
-if __name__ == "__main__":
-    source = """ 
-    public class HelloWorld {
-        public static void main(String[] args) {
-            System.out.println("Hello, World!");
-        }
-    }
-    """
-
-    translation = """
-    def hello_world():
-        print("Hello, World!")
-
-    if __name__ == "__main__":
-        hello_world()
-    """
-
-    comparator = CodeComparator(source, translation, "java")
-    scores = comparator.compare()
-    print("Comparison Scores:", scores)
